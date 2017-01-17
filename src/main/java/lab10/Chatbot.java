@@ -19,7 +19,7 @@ public class Chatbot {
 		
 	}
 	
-	public static String getAnswer(String question){
+	public String getAnswer(String question){
 		switch(question){
 		case "Która godzina?":
 			return getHour();
@@ -36,7 +36,7 @@ public class Chatbot {
 		}
 	}
 	
-	private static String getWeather() {
+	private String getWeather() {
 		StringBuilder weather = new StringBuilder();
 		String url = "http://api.openweathermap.org/data/2.5/weather?id=" + cracowId + "&APPID=" + apiid;
 		try(BufferedReader br = new BufferedReader(
@@ -51,22 +51,20 @@ public class Chatbot {
 			String main = jsonWeather.getJSONArray("weather").getJSONObject(0).getString("main");
 			String temp = jsonWeather.getJSONObject("main").getDouble("temp") + "";
 			
-			return "temperatura: " + temp + " ogólnie(in English): " + main;
+			return "temperature: " + temp + "K, main: " + main;
 		}
 		catch(Exception ex){
-			
+			return "I failed to get info about weather";
 		}
-		
-		
-		return "nie udalo sie pobrac informacji o pogodzie";
+
 	}
 
-	private static String getHour() {
-		return "Napisz \"coœ\" i popatrz w prawy, górny róg wiadomoœci :)";
+	private String getHour() {
+		return "write something and look at top, right corner of message";
 		
 	}
 
-	private static String getDay(){
+	private String getDay(){
 		Calendar calendar = Calendar.getInstance();
 		Date date = calendar.getTime();
 		// 3 letter name form of the day

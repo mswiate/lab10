@@ -1,11 +1,20 @@
 package lab10;
 
-import org.eclipse.jetty.websocket.api.*;
-import org.eclipse.jetty.websocket.api.annotations.*;
+import java.util.NoSuchElementException;
+
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
+import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.json.JSONObject;
+
 
 @WebSocket
 public class ChatWebSocketHandler {
 
+	private ChatFunctions chatFunctions = new ChatFunctions();
+	
     @OnWebSocketConnect
     public void onConnect(Session user) throws Exception {
     
@@ -13,57 +22,50 @@ public class ChatWebSocketHandler {
 
     @OnWebSocketClose
     public void onClose(Session user, int statusCode, String reason) {
-    	String username = Chat.getUsernames().get(user);
-        Chat.removeUserFromChannel(username);
-    	Chat.removeUser(user);
-        
-        
+    	chatFunctions.removeUser(user);
     }
-    
-    /*
-     * user|wiadomosc - wiadomosc od usera na danym kanale
-     * name|wiadomosc - nazwa uzytkownika
-     * addChannel|"nazwa kana³u" - dodanie kana³u
-     * channelEnter|"kana³ 1"- dodanie siebie na kana³
-     * channelExit| - wyjœcie z kana³u
-     */
+
     @OnWebSocketMessage
     public void onMessage(Session user, String message) {
     	String reason = message.substring( 0, message.indexOf('|') );
     	String contents = message.substring( message.indexOf('|') + 1 );
         switch( reason ){
         case "user":
-        	String username = Chat.getUsernames().get(user);
-        	if(!Chat.getUserToChannel().containsKey(username))
-        		Chat.sendMessageToUser(user, "Musisz najpierw zapisaæ siê do kana³u!");
-        	else{
-        		String channel = Chat.getUserToChannel().get(username);
-        		Chat.broadcastMessage(username, contents, channel);
-        	
-        		if(channel.equals("chatbot"))
-        			Chat.askChatbot(contents);
+        	try{
+        		chatFunctions.sendUsersMessage(user, contents);
+        	}
+        	catch(NoSuchElementException ex){
+        		chatFunctions.sendMessageToUser(user, "You must enter channel first, to send message");
         	}
         	break;
         case "name":
-        	if(Chat.addUsername(user, contents))
-        		Chat.refreshForUser(user);
+        	try{
+        		ChatData.addUsername(user, contents);
+//        		cookie
+//        		List<HttpCookie> cookies = new ArrayList<HttpCookie>();
+//        		cookies.add(new HttpCookie("username", contents));
+//        		user.getUpgradeRequest().setCookies(cookies);
+        		
+        		chatFunctions.refreshForUser(user);
+        	}
+        	catch(IllegalArgumentException ex){
+        		try{ user.getRemote().sendString(String.valueOf(new JSONObject().put("reason", "taken_username") ) );
+        		}catch (Exception inEx){inEx.printStackTrace(); };
+        	}
         	break;
         case "addChannel":
-        	Chat.addChannel();
-        	Chat.refresh();
+        	ChatData.addChannel();
+        	chatFunctions.refresh();
         	break;
         case "channelEnter":
-        	Chat.addUserToChannel(Chat.getUsernames().get(user), contents);
-        	//Chat.refresh();
+        	chatFunctions.addUserToChannel(user, contents);
         	break;
         case "channelExit":
-        	if(!Chat.getUserToChannel().containsKey( Chat.getUsernames().get(user) )){
-        		Chat.sendMessageToUser(user, "Nie jestes na zadnym kanale !");
+        	try{
+        		chatFunctions.removeUserFromChannel(user);
+        	}catch(NoSuchElementException ex){
+        		chatFunctions.sendMessageToUser(user, "you arent on any channel");
         	}
-        	else{
-        		Chat.removeUserFromChannel(Chat.getUsernames().get(user));
-        	}
-        	//Chat.refresh();
         	break;
         
         }

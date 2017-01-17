@@ -1,8 +1,8 @@
 //Establish the WebSocket connection and set up event handlers
 var webSocket = new WebSocket("ws://" + location.hostname + ":" + location.port + "/chat/");
-webSocket.onmessage = function (msg) { updateChat(msg); };
+webSocket.onmessage = function (msg) { handleMessage(msg); };
 webSocket.onclose = function () { alert("WebSocket connection closed") };
-webSocket.onopen = setUsername();
+webSocket.onopen = login();
 
 //Send message if "Send" is clicked
 id("send").addEventListener("click", function () {
@@ -26,8 +26,22 @@ function channelEnter(channel){
 	webSocket.send("channelEnter|" + channel);
 }
 
+
+function login(){
+	var username = getCookie("username");// getCookie("username");//= getCookie("username");
+	if(username != ""){
+		alert("logging as " + username + "...");
+		webSocket.send("name|" + username);
+		return;
+	}
+	else
+		setUsername();
+}
+
 function setUsername(){
+	
 	var username = prompt("Type your username: ");
+	
 	if (username == null){
         alert("You can't be without username");
         setUsername();
@@ -42,6 +56,8 @@ function setUsername(){
         return;
 	}
 	
+	setCookie("username", username);
+	
 	webSocket.send("name|" + username);
 }
 
@@ -54,16 +70,16 @@ function sendMessage(message) {
 }
 
 //Update the chat-panel
-function updateChat(msg) {
+function handleMessage(msg) {
 	
 	var data = JSON.parse(msg.data);
-	if(data.userMessage == "TAKEN_USERNAME"){
+	if(data.reason == "taken_username"){
     	alert("nazwa juz zajeta");
     	setUsername();
     	return;
     }
 	
-	if(data.userMessage != "")
+	if(data.reason == "message")
     	insert("chat", data.userMessage);
  
     id("channellist").innerHTML = "";
@@ -79,6 +95,26 @@ function updateChat(msg) {
 		kontener.appendChild(znacznik); 
     });
     
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+} 
+
+function setCookie(name, value) {
+    document.cookie = name + "=" + value + ";";
 }
 
 //Helper function for inserting HTML as the first child of an element
