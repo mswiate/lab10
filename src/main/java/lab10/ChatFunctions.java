@@ -6,15 +6,15 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.json.JSONObject;
 
 public class ChatFunctions {
-		
+		private ChatData chatData = new ChatData();
 		private HTMLMaker htmlMaker = new HTMLMaker(); 
 	
 		public void refresh(){
-	    	ChatData.getUsernames().keySet().stream().filter(Session::isOpen).forEach(session -> {
+			chatData.getsUsersSessions().stream().filter(Session::isOpen).forEach(session -> {
 	            try {
 	                session.getRemote().sendString(String.valueOf(new JSONObject()
 	                		.put("reason", "refresh")
-	                		.put("channellist", ChatData.getChannels())
+	                		.put("channellist", chatData.getChannels())
 	                ));
 	            } catch (Exception e) {
 	                e.printStackTrace();
@@ -26,7 +26,7 @@ public class ChatFunctions {
 	        try {
 	        	user.getRemote().sendString(String.valueOf(new JSONObject()
 	        			.put("reason", "refresh")
-	               		.put("channellist", ChatData.getChannels())
+	               		.put("channellist", chatData.getChannels())
 	        			));
 	        } 
 	        catch (Exception e) {
@@ -36,8 +36,8 @@ public class ChatFunctions {
 		}
 	    
 	    public void sendUsersMessage(Session user, String contents) {
-        	String username = ChatData.getUsername(user);
-        	String channel = ChatData.getUsersChannel(username);
+        	String username = chatData.getUsername(user);
+        	String channel = chatData.getUsersChannel(username);
         	broadcastMessage(username, contents, channel);
         	if(channel.equals("chatbot"))
         		askChatbot(contents);
@@ -45,15 +45,15 @@ public class ChatFunctions {
 		}
 	    
 	    public void askChatbot(String question){
-	    	String answer = ChatData.getChatbotAnswer(question);
+	    	String answer = chatData.getChatbotAnswer(question);
 	    	broadcastMessage("chatbot", answer, "chatbot");
 	    }
 	    
 	    public void broadcastMessage(String sender, String message, String channel) {
-	   	   ChatData.getUsernames().keySet().stream().filter(Session::isOpen)
+	    	chatData.getsUsersSessions().stream().filter(Session::isOpen)
 	   	   .filter(session -> {
 	   		   try{
-	   			   return ChatData.getUsersChannel( ChatData.getUsername(session) ).equals(channel);
+	   			   return chatData.getUsersChannel( chatData.getUsername(session) ).equals(channel);
 	   		   }catch(NoSuchElementException ex){return false;}
 	   	   })
 	   	   .forEach(session -> {
@@ -61,7 +61,7 @@ public class ChatFunctions {
 	   			   session.getRemote().sendString(String.valueOf(new JSONObject()
 	   					   .put("reason", "message")
 	   					   .put("userMessage", htmlMaker.createHtmlMessageFromSender(sender, message))
-	   					   .put("channellist", ChatData.getChannels())
+	   					   .put("channellist", chatData.getChannels())
 	   					   ));
 	   		   } catch (Exception e) {
 	   			   e.printStackTrace();
@@ -75,7 +75,7 @@ public class ChatFunctions {
 	        	user.getRemote().sendString(String.valueOf(new JSONObject()
 	        			.put("reason", "message")
 	               		.put("userMessage", htmlMaker.createHtmlMessageFromSender("Server", message))
-	               		.put("channellist", ChatData.getChannels())
+	               		.put("channellist", chatData.getChannels())
 	        			));
 	        } 
 	        catch (Exception e) {
@@ -84,29 +84,38 @@ public class ChatFunctions {
 		}
 	    
 	    public void addUserToChannel(Session user, String channel){
-	    	String username = ChatData.getUsername(user);
+	    	String username = chatData.getUsername(user);
 	    	
-	    	if(ChatData.isUserToChannel(username))
+	    	if(chatData.isUserToChannel(username))
 	    		removeUserFromChannel(user);
 	    
-	    	ChatData.addUserToChannel(username, channel);
+	    	chatData.addUserToChannel(username, channel);
 	        broadcastMessage(channel, username + " joined", channel);
 	        
 	    }
 	    	
 	    public void removeUserFromChannel(Session user){
-	    	String username = ChatData.getUsername(user);
+	    	String username = chatData.getUsername(user);
 	    	
-	    	String channel = ChatData.getUsersChannel(username);
-	    	ChatData.removeUserFromChannel(username);
+	    	String channel = chatData.getUsersChannel(username);
+	    	chatData.removeUserFromChannel(username);
 	    	broadcastMessage(channel, username + " left", channel);
 	    	
 	    	
 	    }
 	    
-	    public void removeUser(Session user){
-	    	ChatData.removeUser(user);
+	    public void addChannel(){
+	    	chatData.addChannel();
 	    }
+	    
+	    public void removeUser(Session user){
+	    	chatData.removeUser(user);
+	    }
+
+		public void addUsername(Session user, String username) {
+			chatData.addUsername(user, username);
+			
+		}
 
 		
 }

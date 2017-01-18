@@ -9,8 +9,6 @@ public class Chat {
         staticFiles.location("/public"); //index.html is served at localhost:4567 (default port)
         staticFiles.expireTime(600);        
         
-        ChatData.getChannels().add("chatbot");
-        
         webSocket("/chat", ChatWebSocketHandler.class);
         init();
     }

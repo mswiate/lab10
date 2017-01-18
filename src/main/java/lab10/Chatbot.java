@@ -29,10 +29,10 @@ public class Chatbot {
 			return getWeather();
 		default:
 			return "Niestety nie znam odpowiedzi na wszystkie pytania. "
-					+ "Za to bardzo dobrze znam odpowiedz na te trzy pytania:"
-					+ "Która godzina?"
-					+ "Jaki dziœ dzieñ tygodnia?"
-					+ "Jaka jest pogoda w Krakowie?";
+					+ "Za to bardzo dobrze znam odpowiedz na te trzy pytania: "
+					+ " Która godzina? "
+					+ " Jaki dziœ dzieñ tygodnia? "
+					+ " Jaka jest pogoda w Krakowie? ";
 		}
 	}
 	

@@ -40,7 +40,7 @@ public class ChatWebSocketHandler {
         	break;
         case "name":
         	try{
-        		ChatData.addUsername(user, contents);
+        		chatFunctions.addUsername(user, contents);
 //        		cookie
 //        		List<HttpCookie> cookies = new ArrayList<HttpCookie>();
 //        		cookies.add(new HttpCookie("username", contents));
@@ -54,7 +54,7 @@ public class ChatWebSocketHandler {
         	}
         	break;
         case "addChannel":
-        	ChatData.addChannel();
+        	chatFunctions.addChannel();
         	chatFunctions.refresh();
         	break;
         case "channelEnter":
