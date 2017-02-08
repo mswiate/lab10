@@ -12,7 +12,7 @@ import java.util.Locale;
 import org.json.JSONObject;
 
 public class Chatbot {
-	private final static String apiid = "1818e5f1f8165f9561fcf2ce9193e86b";
+	private final static String apiid = "";
 	private final static String cracowId = "3094802";
 	
 	public Chatbot(){
